@@ -4,16 +4,15 @@ console.log("hello")
 import { WTerm, WebSocketTransport } from "@wterm/dom";
 
 const el = document.getElementById("terminal")
-const term = new WTerm(el, { cols: 80, rows: 24 });
+const term = new WTerm(el, { cols: 80, rows: 24, cursorBlink: true });
 await term.init();
 
 const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
 const wsUrl = `${protocol}//${window.location.host}/pty`
 
 const ws = new WebSocketTransport({
-	url: wsUrl, 
+	url: wsUrl,
 	onData: (data) => {
-
 		console.log(data)
 		const decoder = new TextDecoder("utf-8");
 		const result = decoder.decode(data);
