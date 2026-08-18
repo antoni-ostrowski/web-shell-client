@@ -1,0 +1,16 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "dependencies": {
+        "@wterm/dom": "^0.3.3",
+      },
+    },
+  },
+  "packages": {
+    "@wterm/core": ["@wterm/core@0.3.3", "", {}, "sha512-UIDr0HLD92VV3pMkSo6XKu8WJ+41CPLhROuDaomHCVe4aYydfoc17zQSZxMvZCx9xFtKzVcacJ/mR5lOD8HD3A=="],
+
+    "@wterm/dom": ["@wterm/dom@0.3.3", "", { "dependencies": { "@wterm/core": "0.3.3" } }, "sha512-v7aLpnifJV03s0VmrUGEz7iHy/KSX4IXh0gPXFAgyi6+tmF+cRKn5YPdg93KPkF9g+aSARH7yw1gf83wdLda8A=="],
+  }
+}

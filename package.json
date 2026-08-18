@@ -1,0 +1,9 @@
+{
+	"scripts": {
+	    "build": "bun build src.js --outdir public --target browser",
+    "dev": "bun build src.js --outdir public --target browser --watch & go run ."
+  },
+  "dependencies": {
+    "@wterm/dom": "^0.3.3"
+  }
+}
