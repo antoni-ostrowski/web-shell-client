@@ -10,6 +10,11 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type WsMsg struct {
+	Type    string `json:"type"`
+	Payload string `json:"payload,omitempty"`
+}
+
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
@@ -20,7 +25,7 @@ func main() {
 	http.HandleFunc("/pty", handleDirectPipe)
 
 	slog.Info("web server on :3000\n")
-	if err := http.ListenAndServe(":3000", nil); err != nil {
+	if err := http.ListenAndServe("0.0.0.0:3000", nil); err != nil {
 		log.Fatalf("failed to start http server: %v\n", err)
 		return
 	}
@@ -60,13 +65,18 @@ func handleDirectPipe(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	for {
-		msgType, p, err := wsConn.ReadMessage()
+		var msg WsMsg
+		err := wsConn.ReadJSON(&msg)
 		if err != nil {
 			slog.Error("failed to read ws msg:", err.Error(), nil)
 			break
 		}
-		if msgType == websocket.BinaryMessage || msgType == websocket.TextMessage {
-			_, _ = ptmx.Write(p)
+		switch msg.Type {
+		case "data":
+			slog.Info("got data msg", "payload", msg.Payload)
+			_, _ = ptmx.Write([]byte(msg.Payload))
+		case "special_key":
+			slog.Info("got special key msg", "payload", msg.Payload)
 		}
 	}
 
