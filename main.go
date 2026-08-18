@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"log"
 	"log/slog"
 	"net/http"
@@ -15,9 +16,17 @@ import (
 
 var serverUser = os.Getenv("SERVER_USER")
 
+const readSize = 32 * 1024
+const batchSize = 16 * 1024
+const flushEvery = 10 * time.Millisecond
+
 type WsMsg struct {
-	Type    string `json:"type"`
-	Payload string `json:"payload,omitempty"`
+	Type    string          `json:"type"`
+	Payload json.RawMessage `json:"payload,omitempty"`
+}
+type ResizeMsgPayload struct {
+	Cols int `json:"cols"`
+	Rows int `json:"rows"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -65,9 +74,51 @@ func handleDirectPipe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer ptmx.Close()
-	readSize := 32 * 1024
-	batchSize := 16 * 1024
-	flushEvery := 10 * time.Millisecond
+
+	// receiving and piping to PTY
+	go func() {
+		for {
+			var msg WsMsg
+			err := wsConn.ReadJSON(&msg)
+			if err != nil {
+				slog.Error("failed to read ws msg:", err.Error(), nil)
+				break
+			}
+			switch msg.Type {
+			case "data":
+				var payload string
+
+				if err := json.Unmarshal(msg.Payload, &payload); err != nil {
+					slog.Error("invalid data payload", "error", err)
+					continue
+				}
+
+				slog.Info("got data msg", "payload", payload)
+
+				if _, err := ptmx.Write([]byte(payload)); err != nil {
+					slog.Error("failed to write to pty", "error", err)
+				}
+			case "special_key":
+				var payload string
+				_ = json.Unmarshal(msg.Payload, &payload)
+				slog.Info("got special key msg", "payload", payload)
+
+			case "resize":
+				var payload ResizeMsgPayload
+				_ = json.Unmarshal(msg.Payload, &payload)
+				slog.Info("got resize msg", "payload", payload)
+				if err := pty.Setsize(ptmx, &pty.Winsize{
+					Cols: uint16(payload.Cols),
+					Rows: uint16(payload.Rows),
+				}); err != nil {
+					slog.Error("failed to resize pty", "error", err)
+				}
+			}
+		}
+	}()
+
+	// reading from PTY, batching and sending
+
 	chunks := make(chan []byte, 16)
 
 	go func() {
@@ -79,31 +130,10 @@ func handleDirectPipe(w http.ResponseWriter, r *http.Request) {
 				chunk := make([]byte, n)
 				copy(chunk, buf[:n])
 				chunks <- chunk
-				// if err := wsConn.WriteMessage(websocket.BinaryMessage, buf[:n]); err != nil {
-				// 	return
-				// }
 			}
 			if err != nil {
-				slog.Error("failed to read from ptty:", err.Error(), nil)
+				slog.Error("failed to read from ptty:", "error", err)
 				return
-			}
-		}
-	}()
-
-	go func() {
-		for {
-			var msg WsMsg
-			err := wsConn.ReadJSON(&msg)
-			if err != nil {
-				slog.Error("failed to read ws msg:", err.Error(), nil)
-				break
-			}
-			switch msg.Type {
-			case "data":
-				slog.Info("got data msg", "payload", msg.Payload)
-				_, _ = ptmx.Write([]byte(msg.Payload))
-			case "special_key":
-				slog.Info("got special key msg", "payload", msg.Payload)
 			}
 		}
 	}()

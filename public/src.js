@@ -1807,17 +1807,14 @@ class WTerm {
   }
 }
 // src.js
-console.log("hello");
-var el = document.getElementById("terminal");
-var term = new WTerm(el, { cols: 80, rows: 24, cursorBlink: true, autoResize: true });
-await term.init();
 var protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
 var wsUrl = `${protocol}//${window.location.host}/pty`;
+var termElement = document.getElementById("terminal");
+var term = new WTerm(termElement, { cols: 80, rows: 24, cursorBlink: true, autoResize: true });
+await term.init();
 var ws = new WebSocketTransport({
   url: wsUrl,
   onData: (data) => {
-    const decoder = new TextDecoder("utf-8");
-    const result = decoder.decode(data);
     term.write(data);
   }
 });
@@ -1826,6 +1823,15 @@ term.onData = (data) => {
   ws.send(JSON.stringify({
     type: "data",
     payload: data
+  }));
+};
+term.onResize = (cols, rows) => {
+  ws.send(JSON.stringify({
+    type: "resize",
+    payload: {
+      cols,
+      rows
+    }
   }));
 };
 var modifierKeysCodes = [
