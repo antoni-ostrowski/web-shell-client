@@ -45,11 +45,15 @@ const modifierKeysCodes = [
 	'ShiftLeft',
 	'ShiftRight',
 	'CapsLock',
+	'Escape'
 ];
 
 
-window.addEventListener("keydown", (e) => {
+const termTextAreaElement = document.querySelector('#terminal textarea');
+
+termTextAreaElement.addEventListener("keydown", (e) => {
 	const keyCode = e.code
+	console.log(keyCode)
 	if (modifierKeysCodes.includes(keyCode)) {
 		e.preventDefault()
 		console.log("found key:", keyCode)
@@ -58,4 +62,4 @@ window.addEventListener("keydown", (e) => {
 			payload: keyCode
 		}))
 	}
-})
+},)
