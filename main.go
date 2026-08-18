@@ -4,11 +4,14 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"os"
 	"os/exec"
 
 	"github.com/creack/pty"
 	"github.com/gorilla/websocket"
 )
+
+var serverUser = os.Getenv("SERVER_USER")
 
 type WsMsg struct {
 	Type    string `json:"type"`
@@ -37,7 +40,18 @@ func handleDirectPipe(w http.ResponseWriter, r *http.Request) {
 	}
 	defer wsConn.Close()
 
-	cmd := exec.Command("/bin/bash", "--login")
+	shellEnv := os.Getenv("SHELL")
+	var cmd *exec.Cmd
+	if shellEnv == "docker" {
+		cmd = exec.Command(
+			"ssh",
+			"-tt",
+			serverUser+"@host.docker.internal",
+		)
+		cmd.Env = append(os.Environ(), "TERM=xterm-256color")
+	} else {
+		cmd = exec.Command("/bin/zsh", "-l")
+	}
 
 	ptmx, err := pty.Start(cmd)
 	if err != nil {
