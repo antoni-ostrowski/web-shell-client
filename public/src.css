@@ -31,6 +31,7 @@
   line-height: var(--term-line-height);
   outline: none;
   overflow: hidden;
+  overflow-anchor: none;
   border-radius: 8px;
   padding: 12px;
   box-shadow: 0 8px 32px #0006;
@@ -58,10 +59,38 @@
   contain: layout style;
 }
 
-.term-row > span {
+.term-scrollback-spacer {
+  display: block;
+  pointer-events: none;
+}
+
+.term-row > span, .term-row > .term-link, .term-link > span {
   display: inline-block;
   height: var(--term-row-height);
   vertical-align: top;
+}
+
+.term-link {
+  color: inherit;
+  cursor: text;
+}
+
+.wterm.link-modifier-active .term-link:hover {
+  cursor: pointer;
+}
+
+.term-link:focus-visible {
+  cursor: pointer;
+}
+
+.wterm.link-modifier-active .term-link:hover > span {
+  text-decoration: underline;
+  text-underline-offset: .15em;
+}
+
+.term-link:focus-visible > span {
+  text-decoration: underline;
+  text-underline-offset: .15em;
 }
 
 .term-block {

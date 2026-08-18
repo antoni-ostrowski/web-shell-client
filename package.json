@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "@wterm/dom": "^0.3.3"
+    "@wterm/dom": "^0.3.4"
   }
 }

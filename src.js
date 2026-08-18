@@ -2,30 +2,34 @@ console.log("hello")
 
 
 import { WTerm, WebSocketTransport } from "@wterm/dom";
+import "@wterm/dom/css";
 
 const el = document.getElementById("terminal")
-const term = new WTerm(el, { cols: 80, rows: 24, cursorBlink: true });
+const term = new WTerm(el, { cols: 80, rows: 24, cursorBlink: true, autoResize: true, });
 await term.init();
 
 const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
 const wsUrl = `${protocol}//${window.location.host}/pty`
 
+
+
+
 const ws = new WebSocketTransport({
 	url: wsUrl,
 	onData: (data) => {
-		console.log(data)
+		// console.log(data)
 		const decoder = new TextDecoder("utf-8");
 		const result = decoder.decode(data);
 
-		console.log(result); // Output: "Hello"
+		// console.log(result); // Output: "Hello"
+
+
 		term.write(data)
 	},
 });
 
 ws.connect();
 term.onData = (data) => {
-
-
 	ws.send(JSON.stringify({
 		type: "data",
 		payload: data
@@ -56,4 +60,3 @@ window.addEventListener("keydown", (e) => {
 		}))
 	}
 })
-
