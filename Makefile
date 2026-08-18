@@ -16,4 +16,4 @@ build:
 	make build-client && make build-backend
 
 run-docker:
-	docker run -p 3000:3000 -e SHELL=docker -e SERVER_USER=antoni-ostrowski antost360/web-shell-client:latest
+	docker run -p 3000:3000 -e SHELL_TYPE=docker -e SERVER_USER=antoni-ostrowski antost360/web-shell-client:latest

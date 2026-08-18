@@ -40,7 +40,7 @@ func handleDirectPipe(w http.ResponseWriter, r *http.Request) {
 	}
 	defer wsConn.Close()
 
-	shellEnv := os.Getenv("SHELL")
+	shellEnv := os.Getenv("SHELL_TYPE")
 	var cmd *exec.Cmd
 	if shellEnv == "docker" {
 		cmd = exec.Command(
@@ -50,7 +50,11 @@ func handleDirectPipe(w http.ResponseWriter, r *http.Request) {
 		)
 		cmd.Env = append(os.Environ(), "TERM=xterm-256color")
 	} else {
-		cmd = exec.Command("/bin/zsh", "-l")
+		shell := os.Getenv("SHELL")
+		if shell == "" {
+			shell = "/bin/sh"
+		}
+		cmd = exec.Command(shell, "-l")
 	}
 
 	ptmx, err := pty.Start(cmd)
