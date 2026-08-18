@@ -1,11 +1,10 @@
 steps:
   build:
-    image: docker:27-dind
+    image: docker:27-cli
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     commands:
-      - apk add --no-cache make
-      - make build
+      - docker build -t antost360/web-shell-client:latest .
     when:
       - event: pull_request
       - event: push
