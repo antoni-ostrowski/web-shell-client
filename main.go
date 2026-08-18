@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"log"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/creack/pty"
 	"github.com/gorilla/websocket"
@@ -63,17 +65,23 @@ func handleDirectPipe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer ptmx.Close()
+	readSize := 32 * 1024
+	batchSize := 16 * 1024
+	flushEvery := 10 * time.Millisecond
+	chunks := make(chan []byte, 16)
 
 	go func() {
-
-		buf := make([]byte, 2048)
+		defer close(chunks)
+		buf := make([]byte, readSize)
 		for {
 			n, err := ptmx.Read(buf)
 			if n > 0 {
-				if err := wsConn.WriteMessage(websocket.BinaryMessage, buf[:n]); err != nil {
-					return
-				}
-
+				chunk := make([]byte, n)
+				copy(chunk, buf[:n])
+				chunks <- chunk
+				// if err := wsConn.WriteMessage(websocket.BinaryMessage, buf[:n]); err != nil {
+				// 	return
+				// }
 			}
 			if err != nil {
 				slog.Error("failed to read from ptty:", err.Error(), nil)
@@ -82,20 +90,56 @@ func handleDirectPipe(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
+	go func() {
+		for {
+			var msg WsMsg
+			err := wsConn.ReadJSON(&msg)
+			if err != nil {
+				slog.Error("failed to read ws msg:", err.Error(), nil)
+				break
+			}
+			switch msg.Type {
+			case "data":
+				slog.Info("got data msg", "payload", msg.Payload)
+				_, _ = ptmx.Write([]byte(msg.Payload))
+			case "special_key":
+				slog.Info("got special key msg", "payload", msg.Payload)
+			}
+		}
+	}()
+
+	ticker := time.NewTicker(flushEvery)
+	defer ticker.Stop()
+	var batch bytes.Buffer
+
+	flush := func() error {
+		if batch.Len() == 0 {
+			return nil
+		}
+		err := wsConn.WriteMessage(websocket.BinaryMessage, batch.Bytes())
+		batch.Reset()
+		return err
+	}
+
 	for {
-		var msg WsMsg
-		err := wsConn.ReadJSON(&msg)
-		if err != nil {
-			slog.Error("failed to read ws msg:", err.Error(), nil)
-			break
+		select {
+		case chunk, ok := <-chunks:
+			if !ok {
+				_ = flush()
+				return
+			}
+			batch.Write(chunk)
+			if batch.Len() >= batchSize {
+				if err := flush(); err != nil {
+					return
+				}
+			}
+		case <-ticker.C:
+			if err := flush(); err != nil {
+				return
+			}
 		}
-		switch msg.Type {
-		case "data":
-			slog.Info("got data msg", "payload", msg.Payload)
-			_, _ = ptmx.Write([]byte(msg.Payload))
-		case "special_key":
-			slog.Info("got special key msg", "payload", msg.Payload)
-		}
+
 	}
 
 }
