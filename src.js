@@ -3,7 +3,7 @@ import "@wterm/dom/css";
 
 const name = location.pathname.split("/").pop()
 const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-const wsUrl = `${protocol}//${window.location.host}/connect/${name}`;
+const wsUrl = `${protocol}//${location.hostname}:3000/connect/${name}`;
 
 const termElement = document.getElementById("terminal");
 const term = new WTerm(termElement, { cols: 80, rows: 24, cursorBlink: true, autoResize: true });

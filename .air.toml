@@ -1,0 +1,18 @@
+env_files = [".env.local"]
+
+[build]
+cmd = "go build -o ./tmp/main ."
+entrypoint = ["./tmp/main"]
+include_ext = ["go", "html", "css"]
+exclude_dir = ["tmp", "node_modules"]
+
+[[build.rules]]
+name = "frontend"
+include_file = ["src.js"]
+cmd = "bun build src.js --outdir public --target browser"
+
+
+[proxy]
+enabled = true
+proxy_port = 8090
+app_port = 3000

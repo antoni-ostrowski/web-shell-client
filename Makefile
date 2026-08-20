@@ -2,7 +2,7 @@
 export
 
 dev:
-	bun build src.js --outdir public --target browser --watch & CONFIG_PATH="$(CONFIG_PATH)" SSH_KNOWN_HOSTS="$(SSH_KNOWN_HOSTS)" go run .
+	air
 
 build-client:
 	bun build src.js --outdir public --target browser

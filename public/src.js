@@ -1809,7 +1809,7 @@ class WTerm {
 // src.js
 var name = location.pathname.split("/").pop();
 var protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-var wsUrl = `${protocol}//${window.location.host}/connect/${name}`;
+var wsUrl = `${protocol}//${location.hostname}:3000/connect/${name}`;
 var termElement = document.getElementById("terminal");
 var term = new WTerm(termElement, { cols: 80, rows: 24, cursorBlink: true, autoResize: true });
 await term.init();
