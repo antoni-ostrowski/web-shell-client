@@ -56,7 +56,7 @@ Open http://localhost:3000 — the index page lists the servers from `config.jso
 
 
 # Todos
-- [ ] qmk inspired remap control
+- [ ] qmk inspired remaping control
 - [ ] modifying config from client
 
 
