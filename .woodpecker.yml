@@ -4,7 +4,7 @@ steps:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     commands:
-      - docker build -t antost360/web-shell-client:latest .
+      - docker build -t antost360/web-ssh:latest .
     when:
       - event: pull_request
       - event: push
@@ -21,8 +21,8 @@ steps:
         from_secret: DOCKERHUB_PASSWORD 
     commands:
       - echo "$DOCKERHUB_PASSWORD" | docker login -u antost360 --password-stdin
-      - docker push antost360/web-shell-client:latest
-      - cd /home/antost/homelab && docker compose --profile="web-shell-client" up -d web-shell-client 
+      - docker push antost360/web-ssh:latest
+      - cd /home/antost/homelab && docker compose --profile="web-ssh" up -d web-ssh
       - docker image prune -f
     when:
       - event: push
