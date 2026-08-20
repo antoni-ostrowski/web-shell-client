@@ -26,8 +26,8 @@ Self-hosted web app & ssh proxy I build purely to have usable mobile ssh client 
 
 ```yaml
 services:
-  web-shell:
-    image: antost360/web-shell-client:latest
+  web-ssh:
+    image: antost360/web-ssh:latest
     ports:
       - "3000:3000"
     volumes:
