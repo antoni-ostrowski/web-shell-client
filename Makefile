@@ -11,7 +11,7 @@ build-backend:
 	go build -ldflags="-s -w" -o program ./main.go
 
 build-docker:
-	docker build -t antost360/web-shell-client:latest .
+	docker build -t antost360/web-ssh:latest .
 
 build:
 	make build-client && make build-backend
