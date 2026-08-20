@@ -1,4 +1,5 @@
 services:
+  web-ssh:
    extra_hosts:
      - "host.docker.internal:host-gateway"
    build: .
