@@ -5,13 +5,54 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>web shell client</title>
-	<link rel="stylesheet" href="./src.css" />
-	<link rel="stylesheet" href="./my_css.css" />
-	<script defer type="module" src="./src.js"></script>
+	<link rel="stylesheet" href="/src.css" />
+	<link rel="stylesheet" href="/my_css.css" />
+	<style>
+		* {
+			box-sizing: border-box;
+			margin: 0;
+		}
+
+		body {
+			padding: 10px;
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+		}
+
+		h1 {
+			font-size: 1.5rem;
+			font-weight: 600;
+		}
+
+		ul {
+			list-style: none;
+			display: flex;
+			font-size: 1.4rem;
+			flex-direction: column;
+			gap: 0.75rem;
+			padding: 0;
+			align-items: flex-start;
+		}
+
+		a {
+			color: #2563eb;
+			text-decoration: none;
+		}
+
+		a:hover {
+			text-decoration: underline;
+		}
+	</style>
 </head>
 
 <body>
-	<div id="terminal"></div>
+	<h1>Choose ssh server</h1>
+	<ul>
+		{{range .}}
+		<li>
+			<a href="/ssh/{{.Name}}">{{.Name}}</a>
+		</li>
+		{{end}}
+	</ul>
 </body>
 
 </html>

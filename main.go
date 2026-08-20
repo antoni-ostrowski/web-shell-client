@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"html/template"
 	"io"
 	"log"
 	"log/slog"
@@ -10,21 +11,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/antoni-ostrowski/web-shell/internal/config"
 	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/knownhosts"
 )
-
-var serverUser = os.Getenv("SERVER_USER")
-var sshHost = os.Getenv("SSH_HOST")
-var sshPassword = os.Getenv("SSH_PASSWORD")
-
-func knownHostsPath() string {
-	if p := os.Getenv("SSH_KNOWN_HOSTS"); p != "" {
-		return p
-	}
-	return os.ExpandEnv("$HOME/.ssh/known_hosts")
-}
 
 const readSize = 32 * 1024
 const batchSize = 16 * 1024
@@ -43,12 +34,35 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
+var indexTempl = template.Must(template.ParseFiles("./public/index.html"))
+
 func main() {
-	slog.Info("info", "ssh user", serverUser, "ssh host", sshHost, "ssh pass", sshPassword)
+	c, err := config.Get()
+	if err != nil {
+		slog.Error("config: failed to load", "error", err)
+		os.Exit(1)
+	}
+	c.Print()
+	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		c, err := config.Get()
+		if err != nil {
+			msg := "failed to get config"
+			slog.Error(msg, "error", err)
+			http.Error(w, msg, http.StatusInternalServerError)
+		}
+		if err := indexTempl.Execute(w, c.Servers); err != nil {
+			msg := "failed execute template"
+			slog.Error(msg, "error", err)
+			http.Error(w, msg, http.StatusInternalServerError)
+			return
+		}
 
-	http.Handle("/", http.FileServer(http.Dir("./public")))
-
-	http.HandleFunc("/ssh", handleDirectPipe)
+	})
+	http.HandleFunc("/ssh/{name}", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./public/ssh.html")
+	})
+	http.HandleFunc("/connect/{name}", handleDirectPipe)
 
 	slog.Info("web server on :3000\n")
 	if err := http.ListenAndServe("0.0.0.0:3000", nil); err != nil {
@@ -58,6 +72,15 @@ func main() {
 }
 
 func handleDirectPipe(w http.ResponseWriter, r *http.Request) {
+	server, err := config.GetServer(r.PathValue("name"))
+	slog.Info("server", "server", server, "path value", r.PathValue("name"))
+	slog.Info("err", "err", err)
+	if err != nil {
+		msg := "failed to get server details"
+		slog.Error(msg, "error", err)
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
 	wsConn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		return
@@ -69,16 +92,16 @@ func handleDirectPipe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sshConfig := &ssh.ClientConfig{
-		User: serverUser,
+		User: server.User,
 		Auth: []ssh.AuthMethod{
-			ssh.Password(os.Getenv("SSH_PASSWORD")),
+			ssh.Password(server.Password),
 		},
 		HostKeyCallback:   knownHosts,
 		HostKeyAlgorithms: []string{"ssh-ed25519"},
 		Timeout:           10 * time.Second,
 	}
 
-	conn, err := ssh.Dial("tcp", sshHost+":22", sshConfig)
+	conn, err := ssh.Dial("tcp", server.Host+":22", sshConfig)
 	if err != nil {
 		slog.Error("failed to dial conn", "error", err)
 		return
@@ -226,4 +249,11 @@ func readBatchSend(source io.Reader, wsConn *websocket.Conn) {
 		}
 
 	}
+}
+
+func knownHostsPath() string {
+	if p := os.Getenv("SSH_KNOWN_HOSTS"); p != "" {
+		return p
+	}
+	return "/app/config/known_hosts"
 }

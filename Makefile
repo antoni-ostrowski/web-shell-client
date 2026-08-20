@@ -2,7 +2,7 @@
 export
 
 dev:
-	bun build src.js --outdir public --target browser --watch & SERVER_USER="$(SERVER_USER)" SSH_PASSWORD="$(SSH_PASSWORD)" SSH_HOST="$(SSH_HOST)" go run .
+	bun build src.js --outdir public --target browser --watch & CONFIG_PATH="$(CONFIG_PATH)" SSH_KNOWN_HOSTS="$(SSH_KNOWN_HOSTS)" go run .
 
 build-client:
 	bun build src.js --outdir public --target browser
@@ -17,6 +17,6 @@ build:
 	make build-client && make build-backend
 
 run-docker:
-	docker run -p 3000:3000 --env-file .env.local -v "/Users/antoni-ostrowski/.ssh/known_hosts:$(SSH_KNOWN_HOSTS):ro" antost360/web-shell-client:latest
+	docker run -p 3000:3000 -v "/Users/antoni-ostrowski/.ssh/known_hosts:/app/config/known_hosts" -v "./dev/config.json:/app/config/config.json" antost360/web-shell-client:latest
 
-.PHONY: $(filter-out .PHONY, $(value .VARIABLES))
+.PHONY: dev build-client build-backend build-docker build run-docker
