@@ -176,16 +176,13 @@ func handleDirectPipe(w http.ResponseWriter, r *http.Request) {
 				_ = json.Unmarshal(msg.Payload, &payload)
 				slog.Info("got special key msg", "payload", payload)
 
-				// case "resize":
-				// 	var payload ResizeMsgPayload
-				// 	_ = json.Unmarshal(msg.Payload, &payload)
-				// 	slog.Info("got resize msg", "payload", payload)
-				// 	if err := pty.Setsize(ptmx, &pty.Winsize{
-				// 		Cols: uint16(payload.Cols),
-				// 		Rows: uint16(payload.Rows),
-				// 	}); err != nil {
-				// 		slog.Error("failed to resize pty", "error", err)
-				// 	}
+			case "resize":
+				var payload ResizeMsgPayload
+				_ = json.Unmarshal(msg.Payload, &payload)
+				slog.Info("got resize msg", "payload", payload)
+				if err := session.WindowChange(payload.Rows, payload.Cols); err != nil {
+					slog.Error("failed to resize pty", "error", err)
+				}
 			}
 		}
 	}()
