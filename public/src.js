@@ -1808,7 +1808,7 @@ class WTerm {
 }
 // src.js
 var protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-var wsUrl = `${protocol}//${window.location.host}/pty`;
+var wsUrl = `${protocol}//${window.location.host}/ssh`;
 var termElement = document.getElementById("terminal");
 var term = new WTerm(termElement, { cols: 80, rows: 24, cursorBlink: true, autoResize: true });
 await term.init();
