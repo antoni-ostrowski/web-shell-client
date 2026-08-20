@@ -32,7 +32,7 @@ services:
       - "3000:3000"
     volumes:
       - ./dev/config.json:/app/config/config.json:ro
-      - /Users/antoni-ostrowski/.ssh/known_hosts:/app/config/known_hosts:ro
+      - /Users/user/.ssh/known_hosts:/app/config/known_hosts:ro
     restart: unless-stopped
 ```
 
