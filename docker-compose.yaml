@@ -4,7 +4,10 @@ services:
      - "host.docker.internal:host-gateway"
    build: .
    volumes:
-     - web_ssh_config:/app/config
-volumes:
-  web_ssh_config:
+     - type: bind
+       source: ${CONFIG}
+       target: /app/config/config.json
+     - type: bind
+       source: ${KNOWN_HOSTS}
+       target: /app/config/known_hosts
 
