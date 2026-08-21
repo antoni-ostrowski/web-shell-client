@@ -67,10 +67,17 @@ func main() {
 	http.HandleFunc("/connect/{name}", handleDirectPipe)
 
 	slog.Info("web server on :3000\n")
-	if err := http.ListenAndServe("0.0.0.0:3000", nil); err != nil {
+	if err := http.ListenAndServe("0.0.0.0:3000", noStore(http.DefaultServeMux)); err != nil {
 		log.Fatalf("failed to start http server: %v\n", err)
 		return
 	}
+}
+
+func noStore(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store")
+		next.ServeHTTP(w, r)
+	})
 }
 
 func handleDirectPipe(w http.ResponseWriter, r *http.Request) {
