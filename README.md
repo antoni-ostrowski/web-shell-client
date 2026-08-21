@@ -22,11 +22,9 @@ Self-hosted web app & ssh proxy I build purely to have usable mobile ssh client 
 }
 ```
 
-tttsneit
 ## docker-compose.yml
 
 ```yaml
-ttt
 services:
   web-ssh:
     image: antost360/web-ssh:latest
