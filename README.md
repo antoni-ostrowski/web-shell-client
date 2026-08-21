@@ -1,6 +1,8 @@
 # Web ssh 
 
+
 Self-hosted web app & ssh proxy I build purely to have usable mobile ssh client on IpadOS. The point of this project is so I can make use of modifier keys that are literally un-mappable on IpadOS and in every ssh client app except for Blink Shell (I think), but it paid and i dont care about 99% of its features.
+tttt
 
 > Warning! i dont plan to secure this app in any way, because I rely on Cloudflare Tunnel and Zero Trust policies to enforce access control
 
