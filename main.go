@@ -45,8 +45,9 @@ func main() {
 		os.Exit(1)
 	}
 	c.Print()
-	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
+	http.Handle("/public/", noStore(http.StripPrefix("/public/", http.FileServer(http.Dir("./public")))))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store")
 		c, err := config.Get()
 		if err != nil {
 			msg := "failed to get config"
@@ -62,12 +63,13 @@ func main() {
 
 	})
 	http.HandleFunc("/ssh/{name}", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store")
 		http.ServeFile(w, r, "./public/ssh.html")
 	})
 	http.HandleFunc("/connect/{name}", handleDirectPipe)
 
 	slog.Info("web server on :3000\n")
-	if err := http.ListenAndServe("0.0.0.0:3000", noStore(http.DefaultServeMux)); err != nil {
+	if err := http.ListenAndServe(":3000", nil); err != nil {
 		log.Fatalf("failed to start http server: %v\n", err)
 		return
 	}
@@ -92,6 +94,7 @@ func handleDirectPipe(w http.ResponseWriter, r *http.Request) {
 	}
 	wsConn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
+		slog.Error("failed to upgrade websocket", "error", err)
 		return
 	}
 	defer wsConn.Close()
