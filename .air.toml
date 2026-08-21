@@ -13,6 +13,4 @@ cmd = "bun build src.js --outdir public --target browser"
 
 
 [proxy]
-enabled = true
-proxy_port = 8090
-app_port = 3000
+enabled = false
