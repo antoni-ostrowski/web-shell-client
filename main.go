@@ -3,8 +3,10 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"html/template"
 	"io"
+	"io/fs"
 	"log"
 	"log/slog"
 	"net/http"
@@ -89,7 +91,11 @@ func handleDirectPipe(w http.ResponseWriter, r *http.Request) {
 	knownHosts, err := knownhosts.New(knownHostsPath())
 	if err != nil {
 		slog.Error("failed to get ssh known hosts", "error", err)
-		return
+		if errors.Is(err, fs.ErrNotExist) {
+			err = os.WriteFile(knownHostsPath(), []byte(nil), 0o644)
+		} else {
+			return
+		}
 	}
 	sshConfig := &ssh.ClientConfig{
 		User: server.User,
