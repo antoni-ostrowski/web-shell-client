@@ -2,6 +2,8 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
+	"io/fs"
 	"log/slog"
 	"os"
 )
@@ -19,7 +21,15 @@ type Server struct {
 func Get() (cfn Config, err error) {
 	data, err := os.ReadFile(getConfigPath())
 	if err != nil {
-		return
+		slog.Error("failed to read config")
+		if errors.Is(err, fs.ErrNotExist) {
+			slog.Error("err was not exists so creating default")
+			err = writeDefaultConfig()
+			data, err = os.ReadFile(getConfigPath())
+		} else {
+			slog.Error("err was something else", "err", err)
+			return
+		}
 	}
 	err = json.Unmarshal(data, &cfn)
 	return
@@ -54,4 +64,13 @@ func GetServer(name string) (Server, error) {
 	}
 
 	return srv, err
+}
+
+func writeDefaultConfig() error {
+	c := Config{Servers: []Server{{Name: "example name", Password: "example pass", User: "example user", Host: "example host"}}}
+	data, err := json.MarshalIndent(c, " ", " ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(getConfigPath(), data, 0o644)
 }
