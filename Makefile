@@ -15,6 +15,7 @@ build-docker:
 
 build:
 ttt	make build-client && make build-backend
+tts
 
 run-docker:
 	docker run -p 3000:3000 -v "/Users/antoni-ostrowski/.ssh/known_hosts:/app/config/known_hosts" -v "./dev/config.json:/app/config/config.json" antost360/web-shell-client:latest
