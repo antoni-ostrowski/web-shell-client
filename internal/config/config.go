@@ -67,7 +67,7 @@ func GetServer(name string) (Server, error) {
 }
 
 func writeDefaultConfig() error {
-	c := Config{Servers: []Server{{Name: "example name", Password: "password", User: "demo", Host: "test.rebex.net"}}}
+	c := Config{Servers: []Server{{Name: "exampname", Password: "password", User: "demo", Host: "test.rebex.net"}}}
 	data, err := json.MarshalIndent(c, " ", " ")
 	if err != nil {
 		return err
